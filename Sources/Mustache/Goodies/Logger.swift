@@ -74,14 +74,14 @@ extension StandardLibrary {
         public var mustacheBox: MustacheBox {
             return MustacheBox(
                 willRender: { (tag, box) in
-                    if tag.type == .Section {
+                    if tag.type == .section {
                         self.log("\(self.indentationPrefix)\(tag) will render \(box.valueDescription)")
                         self.indentationLevel += 1
                     }
                     return box
                 },
                 didRender: { (tag, box, string) in
-                    if tag.type == .Section {
+                    if tag.type == .section {
                         self.indentationLevel -= 1
                     }
                     if let string = string {
@@ -92,10 +92,10 @@ extension StandardLibrary {
         }
 
         var indentationPrefix: String {
-            return String(repeating: " " as Character, count: indentationLevel * 2)
+            return String(repeating: " ", count: indentationLevel * 2)
         }
 
-        private let log: (String) -> Void
-        private var indentationLevel: Int = 0
+        fileprivate let log: (String) -> Void
+        fileprivate var indentationLevel: Int = 0
     }
 }

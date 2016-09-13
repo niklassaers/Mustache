@@ -68,7 +68,7 @@ in the context stack in order to resolve a key, return the empty box `Box()`.
 In order to express "missing value", and prevent the rendering engine from
 digging deeper, return `Box(NSNull())`.
 */
-public typealias KeyedSubscriptFunction = (key: String) -> MustacheBox
+public typealias KeyedSubscriptFunction = (_ key: String) -> MustacheBox
 
 
 // =============================================================================
@@ -114,7 +114,7 @@ types of filters:
 
 See the documentation of the `Filter()` functions.
 */
-public typealias FilterFunction = (box: MustacheBox, partialApplication: Bool) throws -> MustacheBox
+public typealias FilterFunction = (_ box: MustacheBox, _ partialApplication: Bool) throws -> MustacheBox
 
 
 // -----------------------------------------------------------------------------
@@ -141,11 +141,11 @@ MustacheError of type RenderError.
 - parameter filter: A function `(MustacheBox) throws -> MustacheBox`.
 - returns: A FilterFunction.
 */
-public func Filter(_ filter: (MustacheBox) throws -> MustacheBox) -> FilterFunction {
+public func Filter(_ filter: @escaping (MustacheBox) throws -> MustacheBox) -> FilterFunction {
     return { (box: MustacheBox, partialApplication: Bool) in
         guard !partialApplication else {
             // This is a single-argument filter: we do not wait for another one.
-            throw MustacheError(kind: .RenderError, message: "Too many arguments")
+            throw MustacheError(kind: .renderError, message: "Too many arguments")
         }
         return try filter(box)
     }
@@ -175,11 +175,11 @@ MustacheError of type RenderError.
 - parameter filter: A function `(T?) throws -> MustacheBox`.
 - returns: A FilterFunction.
 */
-public func Filter<T>(_ filter: (T?) throws -> MustacheBox) -> FilterFunction {
+public func Filter<T>(_ filter: @escaping (T?) throws -> MustacheBox) -> FilterFunction {
     return { (box: MustacheBox, partialApplication: Bool) in
         guard !partialApplication else {
             // This is a single-argument filter: we do not wait for another one.
-            throw MustacheError(kind: .RenderError, message: "Too many arguments")
+            throw MustacheError(kind: .renderError, message: "Too many arguments")
         }
         return try filter(box.value as? T)
     }
@@ -207,7 +207,7 @@ For example:
 - parameter filter: A function `([MustacheBox]) throws -> MustacheBox`.
 - returns: A FilterFunction.
 */
-public func VariadicFilter(_ filter: ([MustacheBox]) throws -> MustacheBox) -> FilterFunction {
+public func VariadicFilter(_ filter: @escaping ([MustacheBox]) throws -> MustacheBox) -> FilterFunction {
     
     // f(a,b,c) is implemented as f(a)(b)(c).
     //
@@ -216,7 +216,7 @@ public func VariadicFilter(_ filter: ([MustacheBox]) throws -> MustacheBox) -> F
     //
     // It is the partialApplication flag the tells when it's time to return the
     // final result.
-    func partialFilter(_ filter: ([MustacheBox]) throws -> MustacheBox, arguments: [MustacheBox]) -> FilterFunction {
+    func partialFilter(_ filter: @escaping ([MustacheBox]) throws -> MustacheBox, arguments: [MustacheBox]) -> FilterFunction {
         return { (nextArgument: MustacheBox, partialApplication: Bool) in
             let arguments = arguments + [nextArgument]
             if partialApplication {
@@ -261,15 +261,15 @@ allows you to chain pre-rendering filters without mangling HTML entities.
 - parameter filter: A function `(Rendering) throws -> Rendering`.
 - returns: A FilterFunction.
 */
-public func Filter(_ filter: (Rendering) throws -> Rendering) -> FilterFunction {
+public func Filter(_ filter: @escaping (Rendering) throws -> Rendering) -> FilterFunction {
     return { (box: MustacheBox, partialApplication: Bool) in
         guard !partialApplication else {
             // This is a single-argument filter: we do not wait for another one.
-            throw MustacheError(kind: .RenderError, message: "Too many arguments")
+            throw MustacheError(kind: .renderError, message: "Too many arguments")
         }
         // Box a RenderFunction
         return Box { (info: RenderingInfo) in
-            let rendering = try box.render(info: info)
+            let rendering = try box.render(info)
             return try filter(rendering)
         }
     }
@@ -292,7 +292,7 @@ This example processes `T?` instead of `MustacheBox`, but the idea is the same.
 - parameter filter: A function `(MustacheBox, RenderingInfo) throws -> Rendering`.
 - returns: A FilterFunction.
 */
-public func Filter(_ filter: (MustacheBox, RenderingInfo) throws -> Rendering) -> FilterFunction {
+public func Filter(_ filter: @escaping (MustacheBox, RenderingInfo) throws -> Rendering) -> FilterFunction {
     return Filter { (box: MustacheBox) in
         // Box a RenderFunction
         return Box { (info: RenderingInfo) in
@@ -339,7 +339,7 @@ the `RenderingInfo` and `Rendering` types.
 - parameter filter: A function `(T?, RenderingInfo) throws -> Rendering`.
 - returns: A FilterFunction.
 */
-public func Filter<T>(_ filter: (T?, RenderingInfo) throws -> Rendering) -> FilterFunction {
+public func Filter<T>(_ filter: @escaping (T?, RenderingInfo) throws -> Rendering) -> FilterFunction {
     return Filter { (t: T?) in
         // Box a RenderFunction
         return Box { (info: RenderingInfo) in
@@ -451,7 +451,7 @@ The default rendering thus reads:
                    that describes the problem.
 - returns: A Rendering.
 */
-public typealias RenderFunction = (info: RenderingInfo) throws -> Rendering
+public typealias RenderFunction = (_ info: RenderingInfo) throws -> Rendering
 
 
 // -----------------------------------------------------------------------------
@@ -496,13 +496,13 @@ bolded section has already been parsed with its template. You may prefer the raw
 - parameter lambda: A `String -> String` function.
 - returns: A RenderFunction.
 */
-public func Lambda(_ lambda: (String) -> String) -> RenderFunction {
+public func Lambda(_ lambda: @escaping (String) -> String) -> RenderFunction {
     return { (info: RenderingInfo) in
         switch info.tag.type {
-        case .Variable:
+        case .variable:
             // {{ lambda }}
             return Rendering("(Lambda)")
-        case .Section:
+        case .section:
             // {{# lambda }}...{{/ lambda }}
             //
             // https://github.com/mustache/spec/blob/83b0721610a4e11832e83df19c73ace3289972b9/specs/%7Elambdas.yml#L117
@@ -613,10 +613,10 @@ using a Template instead of a lambda (see the documentation of
 - parameter lambda: A `() -> String` function.
 - returns: A RenderFunction.
 */
-public func Lambda(_ lambda: () -> String) -> RenderFunction {
+public func Lambda(_ lambda: @escaping () -> String) -> RenderFunction {
     return { (info: RenderingInfo) in
         switch info.tag.type {
-        case .Variable:
+        case .variable:
             // {{ lambda }}
             //
             // https://github.com/mustache/spec/blob/83b0721610a4e11832e83df19c73ace3289972b9/specs/%7Elambdas.yml#L73
@@ -625,7 +625,7 @@ public func Lambda(_ lambda: () -> String) -> RenderFunction {
             // Let's render a text template:
             
             let templateRepository = TemplateRepository()
-            templateRepository.configuration.contentType = .Text
+            templateRepository.configuration.contentType = .text
             
             let templateString = lambda()
             let template = try templateRepository.template(string: templateString)
@@ -681,7 +681,7 @@ public func Lambda(_ lambda: () -> String) -> RenderFunction {
             //
             // What should Lambda { "<{{>partial}}>" } render when partial
             // contains "<>"? "&lt;<>&gt;" ????
-        case .Section:
+        case .section:
             // {{# lambda }}...{{/ lambda }}
             //
             // Behave as a true object, and render the section.
@@ -717,7 +717,7 @@ public struct Rendering {
     - parameter contentType: A content type.
     - returns: A Rendering.
     */
-    public init(_ string: String, _ contentType: ContentType = .Text) {
+    public init(_ string: String, _ contentType: ContentType = .text) {
         self.string = string
         self.contentType = contentType
     }
@@ -728,9 +728,9 @@ extension Rendering : CustomDebugStringConvertible {
     public var debugDescription: String {
         var contentTypeString: String
         switch contentType {
-        case .HTML:
+        case .html:
             contentTypeString = "HTML"
-        case .Text:
+        case .text:
             contentTypeString = "Text"
         }
         
@@ -807,7 +807,7 @@ section.
     ]
     try! template.render(Box(data))
 */
-public typealias WillRenderFunction = (tag: Tag, box: MustacheBox) -> MustacheBox
+public typealias WillRenderFunction = (_ tag: Tag, _ box: MustacheBox) -> MustacheBox
 
 
 // =============================================================================
@@ -859,6 +859,6 @@ See also:
 
 - WillRenderFunction
 */
-public typealias DidRenderFunction = (tag: Tag, box: MustacheBox, string: String?) -> Void
+public typealias DidRenderFunction = (_ tag: Tag, _ box: MustacheBox, _ string: String?) -> Void
 
 

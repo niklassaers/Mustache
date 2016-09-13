@@ -36,7 +36,7 @@ final class SectionTag: LocatedTag {
     
     // Mark: - Tag protocol
     
-    let type: TagType = .Section
+    let type: TagType = .section
     let innerTemplateString: String
     var tagDelimiterPair: TagDelimiterPair { return openingToken.tagDelimiterPair! }
     

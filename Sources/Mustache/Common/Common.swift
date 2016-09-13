@@ -46,8 +46,8 @@ See also:
 - Rendering
 */
 public enum ContentType {
-    case Text
-    case HTML
+    case text
+    case html
 }
 
 
@@ -59,9 +59,9 @@ public struct MustacheError: Swift.Error {
     
     /// MustacheError types
     public enum Kind : Int {
-        case TemplateNotFound
-        case ParseError
-        case RenderError
+        case templateNotFound
+        case parseError
+        case renderError
     }
     
     /// The error type
@@ -122,15 +122,15 @@ extension MustacheError : CustomStringConvertible {
     public var description: String {
         var description: String
         switch kind {
-        case .TemplateNotFound:
+        case .templateNotFound:
             description = ""
-        case .ParseError:
+        case .parseError:
             if let locationDescription = locationDescription {
                 description = "Parse error at \(locationDescription)"
             } else {
                 description = "Parse error"
             }
-        case .RenderError:
+        case .renderError:
             if let locationDescription = locationDescription {
                 description = "Rendering error at \(locationDescription)"
             } else {

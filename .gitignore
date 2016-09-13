@@ -31,3 +31,4 @@ xcuserdata
 XcodeDevelopment/
 .build
 *.xcodeproj
+.DS_Store

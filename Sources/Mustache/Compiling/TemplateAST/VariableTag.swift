@@ -34,7 +34,7 @@ final class VariableTag: LocatedTag {
     
     // Mark: - Tag protocol
     
-    let type: TagType = .Variable
+    let type: TagType = .variable
     let innerTemplateString: String = ""
     var tagDelimiterPair: TagDelimiterPair { return token.tagDelimiterPair! }
     

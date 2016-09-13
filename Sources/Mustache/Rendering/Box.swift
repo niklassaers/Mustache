@@ -177,10 +177,10 @@ extension Bool: MustacheBoxable {
             boolValue: self,
             render: { (info: RenderingInfo) in
                 switch info.tag.type {
-                case .Variable:
+                case .variable:
                     // {{ bool }}
                     return Rendering("\(self ? 1 : 0)") // Behave like [NSNumber numberWithBool:]
-                case .Section:
+                case .section:
                     if info.enumerationItem {
                         // {{# bools }}...{{/ bools }}
                         return try info.tag.render(context: info.context.extendedContext(Box(boolValue: self)))
@@ -234,10 +234,10 @@ extension Int: MustacheBoxable {
             boolValue: (self != 0),
             render: { (info: RenderingInfo) in
                 switch info.tag.type {
-                case .Variable:
+                case .variable:
                     // {{ int }}
                     return Rendering("\(self)")
-                case .Section:
+                case .section:
                     if info.enumerationItem {
                         // {{# ints }}...{{/ ints }}
                         return try info.tag.render(context: info.context.extendedContext(Box(value: self)))
@@ -291,10 +291,10 @@ extension UInt: MustacheBoxable {
             boolValue: (self != 0),
             render: { (info: RenderingInfo) in
                 switch info.tag.type {
-                case .Variable:
+                case .variable:
                     // {{ uint }}
                     return Rendering("\(self)")
-                case .Section:
+                case .section:
                     if info.enumerationItem {
                         // {{# uints }}...{{/ uints }}
                         return try info.tag.render(context: info.context.extendedContext(Box(value: self)))
@@ -348,10 +348,10 @@ extension Double: MustacheBoxable {
             boolValue: (self != 0.0),
             render: { (info: RenderingInfo) in
                 switch info.tag.type {
-                case .Variable:
+                case .variable:
                     // {{ double }}
                     return Rendering("\(self)")
-                case .Section:
+                case .section:
                     if info.enumerationItem {
                         // {{# doubles }}...{{/ doubles }}
                         return try info.tag.render(context: info.context.extendedContext(Box(value: self)))
@@ -735,7 +735,7 @@ Otherwise, GRMustache logs a warning, and returns the empty box.
 - parameter object: An object.
 - returns: A MustacheBox that wraps *object*.
 */
-private func BoxAnyObject(object: AnyObject?) -> MustacheBox {
+private func BoxAnyObject(_ object: AnyObject?) -> MustacheBox {
     if let boxable = object as? MustacheBoxable {
         return boxable.mustacheBox
     } else if let object: AnyObject = object {
@@ -821,7 +821,7 @@ extension Collection {
                      whatever the type of the collection items.
     - returns: A Rendering
     */
-    private func renderItems(info: RenderingInfo, box: @noescape(Iterator.Element) -> MustacheBox) throws -> Rendering {
+    fileprivate func renderItems(_ info: RenderingInfo, box: (Iterator.Element) -> MustacheBox) throws -> Rendering {
         // Prepare the rendering. We don't known the contentType yet: it depends on items
         var info = info
         var buffer = ""
@@ -844,7 +844,7 @@ extension Collection {
         info.enumerationItem = true
         
         for item in self {
-            let boxRendering = try box(item).render(info: info)
+            let boxRendering = try box(item).render(info)
             if contentType == nil
             {
                 // First item: now we know our contentType
@@ -860,7 +860,7 @@ extension Collection {
             {
                 // Inconsistent content type: this is an error. How are we
                 // supposed to mix Text and HTML?
-                throw MustacheError(kind: .RenderError, message: "Content type mismatch")
+                throw MustacheError(kind: .renderError, message: "Content type mismatch")
             }
         }
         
@@ -913,7 +913,7 @@ extension Collection where IndexDistance == Int {
                        whatever the type of the collection items.
     - returns: A MustacheBox that wraps the collection.
     */
-    private func mustacheBox(withSetValue value: Any?, box: (Iterator.Element) -> MustacheBox) -> MustacheBox {
+    fileprivate func mustacheBox(withSetValue value: Any?, box: @escaping (Iterator.Element) -> MustacheBox) -> MustacheBox {
         return MustacheBox(
             converter: MustacheBox.Converter(arrayValue: self.map({ box($0) })),
             value: value,
@@ -939,7 +939,7 @@ extension Collection where IndexDistance == Int {
                 } else {
                     // {{ collection }}
                     // {{# collection }}...{{/ collection }}
-                    return try self.renderItems(info: info, box: box)
+                    return try self.renderItems(info, box: box)
                 }
             }
         )
@@ -963,7 +963,7 @@ extension BidirectionalCollection where IndexDistance == Int {
                        whatever the type of the collection items.
     - returns: A MustacheBox that wraps the collection.
     */
-    private func mustacheBox(withArrayValue value: Any?, box: (Iterator.Element) -> MustacheBox) -> MustacheBox {
+    fileprivate func mustacheBox(withArrayValue value: Any?, box: @escaping (Iterator.Element) -> MustacheBox) -> MustacheBox {
         return MustacheBox(
             converter: MustacheBox.Converter(arrayValue: self.map({ box($0) })),
             value: value,
@@ -995,7 +995,7 @@ extension BidirectionalCollection where IndexDistance == Int {
                 } else {
                     // {{ collection }}
                     // {{# collection }}...{{/ collection }}
-                    return try self.renderItems(info: info, box: box)
+                    return try self.renderItems(info, box: box)
                 }
             }
         )
@@ -1044,7 +1044,7 @@ type of the raw boxed value (Array, Set, NSArray, NSSet, ...).
 
 - returns: A MustacheBox that wraps *array*.
 */
-public func Box<C: Collection where C.Iterator.Element: MustacheBoxable, C.IndexDistance == Int>(set: C?) -> MustacheBox {
+public func Box<C: Collection>(_ set: C?) -> MustacheBox where C.Iterator.Element: MustacheBoxable, C.IndexDistance == Int {
     if let set = set {
         return set.mustacheBox(withSetValue: set, box: { Box(boxable: $0) })
     } else {
@@ -1095,7 +1095,7 @@ type of the raw boxed value (Array, Set, NSArray, NSSet, ...).
 
 - returns: A MustacheBox that wraps *array*.
 */
-public func Box<C: BidirectionalCollection where C.Iterator.Element: MustacheBoxable, C.IndexDistance == Int>(array: C?) -> MustacheBox {
+public func Box<C: BidirectionalCollection>(_ array: C?) -> MustacheBox where C.Iterator.Element: MustacheBoxable, C.IndexDistance == Int {
     if let array = array {
         return array.mustacheBox(withArrayValue: array, box: { Box(boxable: $0) })
     } else {
@@ -1146,7 +1146,7 @@ type of the raw boxed value (Array, Set, NSArray, NSSet, ...).
 
 - returns: A MustacheBox that wraps *array*.
 */
-public func Box<C: BidirectionalCollection, T where C.Iterator.Element == Optional<T>, T: MustacheBoxable, C.IndexDistance == Int>(array: C?) -> MustacheBox {
+public func Box<C: BidirectionalCollection, T>(_ array: C?) -> MustacheBox where C.Iterator.Element == Optional<T>, T: MustacheBoxable, C.IndexDistance == Int {
     if let array = array {
         return array.mustacheBox(withArrayValue: array, box: { Box(boxable: $0) })
     } else {
@@ -1207,7 +1207,7 @@ dictionary, whatever the actual type of the raw boxed value.
 
 - returns: A MustacheBox that wraps *dictionary*.
 */
-public func Box<T: MustacheBoxable>(dictionary: [String: T]?) -> MustacheBox {
+public func Box<T: MustacheBoxable>(_ dictionary: [String: T]?) -> MustacheBox {
     if let dictionary = dictionary {
         return MustacheBox(
             converter: MustacheBox.Converter(
@@ -1319,7 +1319,7 @@ See also:
 
 - FilterFunction
 */
-public func Box(filter: FilterFunction) -> MustacheBox {
+public func Box(filter: @escaping FilterFunction) -> MustacheBox {
     return MustacheBox(filter: filter)
 }
 
@@ -1340,7 +1340,7 @@ See also:
 
 - RenderFunction
 */
-public func Box(render: RenderFunction) -> MustacheBox {
+public func Box(render: @escaping RenderFunction) -> MustacheBox {
     return MustacheBox(render: render)
 }
 
@@ -1372,7 +1372,7 @@ See also:
 
 - WillRenderFunction
 */
-public func Box(willRender: WillRenderFunction) -> MustacheBox {
+public func Box(willRender: @escaping WillRenderFunction) -> MustacheBox {
     return MustacheBox(willRender: willRender)
 }
 
@@ -1405,7 +1405,7 @@ See also:
 
 - DidRenderFunction
 */
-public func Box(didRender: DidRenderFunction) -> MustacheBox {
+public func Box(didRender: @escaping DidRenderFunction) -> MustacheBox {
     return MustacheBox(didRender: didRender)
 }
 

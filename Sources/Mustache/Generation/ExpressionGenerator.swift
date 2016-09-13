@@ -44,24 +44,24 @@ final class ExpressionGenerator {
     
     func render(expression: Expression) {
         switch expression {
-        case .ImplicitIterator:
+        case .implicitIterator:
             // {{ . }}
             
             buffer.append(".")
             
-        case .Identifier(let identifier):
+        case .identifier(let identifier):
             // {{ identifier }}
             
             buffer.append(identifier)
             
-        case .Scoped(let baseExpression, let identifier):
+        case .scoped(let baseExpression, let identifier):
             // {{ <expression>.identifier }}
             
             render(expression: baseExpression)
             buffer.append(".")
             buffer.append(identifier)
             
-        case .Filter(let filterExpression, let argumentExpression, _):
+        case .filter(let filterExpression, let argumentExpression, _):
             // {{ <expression>(<expression>) }}
             //
             // Support for variadic filters is not implemented:
@@ -74,5 +74,5 @@ final class ExpressionGenerator {
         }
     }
     
-    private var buffer: String = ""
+    fileprivate var buffer: String = ""
 }

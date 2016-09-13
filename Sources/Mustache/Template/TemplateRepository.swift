@@ -236,14 +236,14 @@ final public class TemplateRepository {
     
     func templateAST(named name: String, relativeToTemplateID baseTemplateID: TemplateID? = nil) throws -> TemplateAST {
         guard let dataSource = self.dataSource else {
-            throw MustacheError(kind: .TemplateNotFound, message: "Missing dataSource", templateID: baseTemplateID)
+            throw MustacheError(kind: .templateNotFound, message: "Missing dataSource", templateID: baseTemplateID)
         }
         
         guard let templateID = dataSource.templateID(forName: name, relativeToTemplateID: baseTemplateID) else {
             if let baseTemplateID = baseTemplateID {
-                throw MustacheError(kind: .TemplateNotFound, message: "Template not found: \"\(name)\" from \(baseTemplateID)", templateID: baseTemplateID)
+                throw MustacheError(kind: .templateNotFound, message: "Template not found: \"\(name)\" from \(baseTemplateID)", templateID: baseTemplateID)
             } else {
-                throw MustacheError(kind: .TemplateNotFound, message: "Template not found: \"\(name)\"")
+                throw MustacheError(kind: .templateNotFound, message: "Template not found: \"\(name)\"")
             }
         }
         
@@ -291,8 +291,8 @@ final public class TemplateRepository {
     }
     
     
-    private var _lockedConfiguration: Configuration?
-    private var lockedConfiguration: Configuration {
+    fileprivate var _lockedConfiguration: Configuration?
+    fileprivate var lockedConfiguration: Configuration {
         // Changing mutable values within the repository's configuration no
         // longer has any effect.
         if _lockedConfiguration == nil {
@@ -301,13 +301,13 @@ final public class TemplateRepository {
         return _lockedConfiguration!
     }
     
-    private var templateASTCache: [TemplateID: TemplateAST]
+    fileprivate var templateASTCache: [TemplateID: TemplateAST]
     
     
     // -------------------------------------------------------------------------
     // MARK: DictionaryDataSource
     
-    private class DictionaryDataSource: TemplateRepositoryDataSource {
+    fileprivate class DictionaryDataSource: TemplateRepositoryDataSource {
         let templates: [String: String]
         
         init(templates: [String: String]) {
@@ -322,7 +322,7 @@ final public class TemplateRepository {
             if let string = templates[templateID] {
                 return string
             } else {
-                throw MustacheError(kind: .TemplateNotFound, templateID: templateID)
+                throw MustacheError(kind: .templateNotFound, templateID: templateID)
             }
         }
     }

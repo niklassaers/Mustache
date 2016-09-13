@@ -36,12 +36,12 @@ final class TemplateAST {
     //
     // See TemplateRepository.templateAST(named:relativeToTemplateID:error:).
     enum TemplateASTType {
-        case Undefined
-        case Defined(nodes: [TemplateASTNode], contentType: ContentType)
+        case undefined
+        case defined(nodes: [TemplateASTNode], contentType: ContentType)
     }
     var type: TemplateASTType
 
-    private init(type: TemplateASTType) {
+    fileprivate init(type: TemplateASTType) {
         self.type = type
     }
 
@@ -50,14 +50,14 @@ final class TemplateAST {
     Returns an undefined TemplateAST.
     */
     convenience init() {
-        self.init(type: TemplateASTType.Undefined)
+        self.init(type: TemplateASTType.undefined)
     }
 
     /**
     Returns a defined TemplateAST.
     */
     convenience init(nodes: [TemplateASTNode], contentType: ContentType) {
-        self.init(type: TemplateASTType.Defined(nodes: nodes, contentType: contentType))
+        self.init(type: TemplateASTType.defined(nodes: nodes, contentType: contentType))
     }
 
     /**
@@ -65,9 +65,9 @@ final class TemplateAST {
     */
     var nodes: [TemplateASTNode]! {
         switch type {
-        case .Undefined:
+        case .undefined:
             return nil
-        case .Defined(let nodes, _):
+        case .defined(let nodes, _):
             return nodes
         }
     }
@@ -77,9 +77,9 @@ final class TemplateAST {
     */
     var contentType: ContentType! {
         switch type {
-        case .Undefined:
+        case .undefined:
             return nil
-        case .Defined(_, let contentType):
+        case .defined(_, let contentType):
             return contentType
         }
     }

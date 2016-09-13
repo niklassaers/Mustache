@@ -30,10 +30,10 @@ information.
 public enum TagType {
     
     /// The type of tags such as `{{name}}` and `{{{body}}}`.
-    case Variable
+    case variable
     
     /// The type of section tags such as `{{#user}}...{{/user}}`.
-    case Section
+    case section
 }
 
 

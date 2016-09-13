@@ -146,7 +146,7 @@ final public class MustacheBox {
     - returns: The MustacheBox for *key*.
     */
     public func mustacheBox(forKey key: String) -> MustacheBox {
-        return keyedSubscript?(key: key) ?? Box()
+        return keyedSubscript?(key) ?? Box()
     }
     
     
@@ -154,7 +154,7 @@ final public class MustacheBox {
     // MARK: - Other facets
     
     /// See the documentation of `RenderFunction`.
-    public private(set) var render: RenderFunction
+    public fileprivate(set) var render: RenderFunction
     
     /// See the documentation of `FilterFunction`.
     public let filter: FilterFunction?
@@ -475,16 +475,16 @@ final public class MustacheBox {
                 
                 // Default rendering depends on the tag type:
                 switch info.tag.type {
-                case .Variable:
+                case .variable:
                     // {{ box }} and {{{ box }}}
                     
                     if let value = self.value {
                         // Use the built-in Swift String Interpolation:
-                        return Rendering("\(value)", .Text)
+                        return Rendering("\(value)", .text)
                     } else {
-                        return Rendering("", .Text)
+                        return Rendering("", .text)
                     }
-                case .Section:
+                case .section:
                     // {{# box }}...{{/ box }}
                     
                     // Push the value on the top of the context stack:
@@ -497,7 +497,7 @@ final public class MustacheBox {
         }
     }
     
-    private let hasCustomRenderFunction: Bool
+    fileprivate let hasCustomRenderFunction: Bool
     
     // Converter wraps all the conversion closures that help MustacheBox expose
     // its raw value (typed Any) as useful types.
@@ -506,8 +506,8 @@ final public class MustacheBox {
         let dictionaryValue: (() -> [String: MustacheBox]?)
         
         init(
-            arrayValue: @autoclosure(escaping)() -> [MustacheBox]? = nil,
-            dictionaryValue: @autoclosure(escaping)() -> [String: MustacheBox]? = nil)
+            arrayValue: @autoclosure @escaping () -> [MustacheBox]? = nil,
+            dictionaryValue: @autoclosure @escaping () -> [String: MustacheBox]? = nil)
         {
             self.arrayValue = arrayValue
             self.dictionaryValue = dictionaryValue

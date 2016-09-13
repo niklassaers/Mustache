@@ -50,7 +50,7 @@ final class TemplateGenerator {
         return buffer
     }
     
-    private func render(templateAST: TemplateAST) {
+    fileprivate func render(templateAST: TemplateAST) {
         for node in templateAST.nodes {
             render(templateASTNode: node)
         }
@@ -58,7 +58,7 @@ final class TemplateGenerator {
 
     func render(templateASTNode node: TemplateASTNode) {
         switch node {
-        case .BlockNode(let block):
+        case .blockNode(let block):
             let tagStartDelimiter = configuration.tagDelimiterPair.0
             let tagEndDelimiter = configuration.tagDelimiterPair.1
             let name = block.name
@@ -66,7 +66,7 @@ final class TemplateGenerator {
             render(templateAST: block.innerTemplateAST)
             buffer.append("\(tagStartDelimiter)/\(name)\(tagEndDelimiter)")
             
-        case .PartialOverrideNode(let partialOverride):
+        case .partialOverrideNode(let partialOverride):
             let tagStartDelimiter = configuration.tagDelimiterPair.0
             let tagEndDelimiter = configuration.tagDelimiterPair.1
             let name = partialOverride.parentPartial.name ?? "<null>"
@@ -74,13 +74,13 @@ final class TemplateGenerator {
             render(templateAST: partialOverride.childTemplateAST)
             buffer.append("\(tagStartDelimiter)/\(name)\(tagEndDelimiter)")
             
-        case .PartialNode(let partial):
+        case .partialNode(let partial):
             let tagStartDelimiter = configuration.tagDelimiterPair.0
             let tagEndDelimiter = configuration.tagDelimiterPair.1
             let name = partial.name ?? "<null>"
             buffer.append("\(tagStartDelimiter)>\(name)\(tagEndDelimiter)")
             
-        case .SectionNode(let section):
+        case .sectionNode(let section):
             // Change delimiters tags are ignored. Always use configuration tag
             // delimiters.
             let tagStartDelimiter = configuration.tagDelimiterPair.0
@@ -94,10 +94,10 @@ final class TemplateGenerator {
             render(templateAST: section.tag.innerTemplateAST)
             buffer.append("\(tagStartDelimiter)/\(expression)\(tagEndDelimiter)")
             
-        case .TextNode(let text):
+        case .textNode(let text):
             buffer.append(text)
             
-        case .VariableNode(let variable):
+        case .variableNode(let variable):
             // Change delimiters tags are ignored. Always use configuration tag
             // delimiters.
             let tagStartDelimiter = configuration.tagDelimiterPair.0
@@ -113,5 +113,5 @@ final class TemplateGenerator {
         }
     }
     
-    private var buffer: String = ""
+    fileprivate var buffer: String = ""
 }
